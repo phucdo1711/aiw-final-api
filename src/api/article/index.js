@@ -6,7 +6,7 @@ import { schema } from './model'
 export Article, { schema } from './model'
 
 const router = new Router()
-const { title, desc, content, thumb, category } = schema.tree
+const { title, desc, content, thumb, category , tags} = schema.tree
 
 /**
  * @api {post} /articles Create article
@@ -36,7 +36,8 @@ router.post('/',
  */
 router.get('/',
   query({
-    category
+    category, 
+    tags
   }),
   index)
 

@@ -1,11 +1,12 @@
 import mongoose, { Schema } from 'mongoose'
 
-const categorySchema = new Schema({
+const tagSchema = new Schema({
   name: {
-    type: String, 
-    trim: true, 
-    unique: true,
-    index: true
+    type: String,
+    required: true, 
+    unique: true, 
+    trim: true,
+    index: true,
   }
 }, {
   timestamps: true,
@@ -15,7 +16,7 @@ const categorySchema = new Schema({
   }
 })
 
-categorySchema.methods = {
+tagSchema.methods = {
   view (full) {
     const view = {
       // simple view
@@ -32,7 +33,7 @@ categorySchema.methods = {
   }
 }
 
-const model = mongoose.model('Category', categorySchema)
+const model = mongoose.model('Tag', tagSchema)
 
 export const schema = model.schema
 export default model

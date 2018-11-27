@@ -1,11 +1,22 @@
 import mongoose, { Schema } from 'mongoose'
 
-const categorySchema = new Schema({
+const commentSchema = new Schema({
   name: {
-    type: String, 
-    trim: true, 
-    unique: true,
-    index: true
+    type: String
+  },
+  email: {
+    type: String,
+    required: true
+  },
+  content: {
+    type: String,
+    trim: true,
+    required: true
+  },
+  article: {
+    type: Schema.Types.ObjectId,
+    ref: 'Article',
+    required: true
   }
 }, {
   timestamps: true,
@@ -15,12 +26,15 @@ const categorySchema = new Schema({
   }
 })
 
-categorySchema.methods = {
+commentSchema.methods = {
   view (full) {
     const view = {
       // simple view
       id: this.id,
       name: this.name,
+      email: this.email,
+      content: this.content,
+      article: this.article,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt
     }
@@ -32,7 +46,7 @@ categorySchema.methods = {
   }
 }
 
-const model = mongoose.model('Category', categorySchema)
+const model = mongoose.model('Comment', commentSchema)
 
 export const schema = model.schema
 export default model

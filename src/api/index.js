@@ -1,11 +1,15 @@
 import { Router } from 'express'
 import article from './article'
 import category from './category'
+import tag from './tag'
+import comment from './comment'
 
 const router = new Router()
 
 router.use('/articles', article)
 router.use('/categories', category)
+router.use('/tags', tag)
+router.use('/comments', comment)
 
 /**
  * @apiDefine master Master access only

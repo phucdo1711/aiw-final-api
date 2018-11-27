@@ -12,7 +12,8 @@
     "prod": "cross-env NODE_ENV=production nodemon -i \"*.test.js\" -r dotenv-safe/config .",
     "lint": "eslint src",
     "docs": "apidoc -i src -o docs && apidoc-markdown -p docs -o DOCS.md",
-    "postdocs": "opn docs/index.html"
+    "postdocs": "opn docs/index.html",
+    "build": "webpack -p"
   },
   "jest": {
     "testEnvironment": "node",
@@ -23,8 +24,12 @@
     "apidoc-markdown": "^0.2.0",
     "babel-eslint": "^8.0.1",
     "babel-jest": "^20.0.3",
+    "babel-loader": "^7.1.5",
+    "babel-polyfill": "^6.26.0",
+    "clean-webpack-plugin": "^1.0.0",
     "cross-env": "^5.0.5",
     "dotenv-safe": "^4.0.3",
+    "dotenv-webpack": "^1.5.7",
     "eslint": "^4.19.1",
     "eslint-config-standard": "^11.0.0",
     "eslint-plugin-import": "^2.11.0",
@@ -37,7 +42,11 @@
     "nodemon": "^1.10.2",
     "opn-cli": "^3.1.0",
     "sinon": "^4.0.1",
-    "supertest": "^3.0.0"
+    "supertest": "^3.0.0",
+    "uglifyjs-webpack-plugin": "^2.0.1",
+    "webpack": "^4.26.1",
+    "webpack-cli": "^3.1.2",
+    "webpack-node-externals": "^1.7.2"
   },
   "dependencies": {
     "babel-core": "^6.26.0",

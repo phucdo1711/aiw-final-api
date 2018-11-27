@@ -3,7 +3,12 @@ import mongoose, {
 } from 'mongoose'
 
 import Crawler from 'crawler';
-import { Category } from '../category'
+import {
+  Category
+} from '../category'
+import {
+  Tag
+} from '../tag';
 
 const articleSchema = new Schema({
   title: {
@@ -23,10 +28,25 @@ const articleSchema = new Schema({
     type: String,
     trim: true
   },
+  time: {
+    type: Date,
+  },
+  source: {
+    name: String,
+    href: String
+  },
+  author: {
+    type: String,
+    trim: true
+  },
+  tags: [{
+    type: Schema.Types.ObjectId,
+    ref: 'Tag',
+  }],
   category: {
-    type: Schema.Types.ObjectId, 
+    type: Schema.Types.ObjectId,
     ref: 'Category',
-  }, 
+  },
 }, {
   timestamps: true,
   toJSON: {
@@ -44,15 +64,20 @@ articleSchema.methods = {
       id: this.id,
       title: this.title,
       desc: this.desc,
-      content: this.content,
       thumb: this.thumb,
       category: this.category,
+      time: this.time,
+      author: this.author,
       createdAt: this.createdAt,
-      updatedAt: this.updatedAt
+      updatedAt: this.updatedAt,
+      tags: this.tags
+
     }
 
     return full ? {
-      ...view
+      ...view,
+      content: this.content,
+      source: this.source,
       // add properties for a full view
     } : view
   }
@@ -60,76 +85,129 @@ articleSchema.methods = {
 
 const model = mongoose.model('Article', articleSchema)
 
-// model.count().then(count => {
-//   if (count > 150) return;
-//   var cDetail = new Crawler({
-//     maxConnections: 1,
-//     callback: function (error, res, done) {
-//       if (error) {
-//         console.log(error);
-//       } else {
-//         var $ = res.$;
-//         const title = $('h1.kbwc-title')
-//           .text()
-//           .trim()
-//         const desc = $('h2.knc-sapo')
-//           .text()
-//           .trim()
-//         const content = $('div.knc-content')
-//           .html()
-//           .trim()
-//         const thumb = $('meta[property="og:image"]').attr('content');
+model.count().then(count => {
+  if (count > 200) return;
+  var cDetail = new Crawler({
+    maxConnections: 1,
+    callback: async function (error, res, done) {
+      if (error) {
+        console.log(error);
+      } else {
+        var $ = res.$;
+        const title = $('title')
+          .text()
+          .trim()
+        const author = $('span.author').text().trim();
+        const desc = $('h2[data-field="sapo"]')
+          .text()
+          .trim()
+        const content = $('div.rightdetail_content')
+          .html()
+          .trim()
+        const thumb = $('meta[property="og:image"]').attr('content');
+        var time = $('meta[itemprop="datePublished"]').attr('content');
 
-//         const categoryName = $('li.active span[itemprop=name]').text()
-//         Category.find({name: categoryName}).then(rs => {
-//           if(rs.length > 0) {
-//             var cate = rs[0];
-//             model.create({title, desc,content, thumb,category: cate._id })
-//           }
-//           else Category.create({name: categoryName}).then((cate) => {
-//             model.create({title, desc,content, thumb,category: cate._id })
-//           })
-//         })
-//         // model.create({title, desc, content, thumb})
-      
-//       }
-//       done();
-//     }
-//   })
+        const categoryName = $('a.category span[itemprop=name]').text().replace('GameK', '')
 
-//   var c = new Crawler({
-//     maxConnections: 1,
-//     callback: function (error, res, done) {
-//       if (error) {
-//         console.log(error);
-//       } else {
-//         var $ = res.$;
-//         const nodes = $("h4.knswli-title")
+        var source = {}
+        source.name = $('a.fon9[target="_blank"]').text();
+        source.href = $('a.fon9[target="_blank"]').attr('href');
 
-//         nodes.each(function (i, e) {
+        var tagsNodes = $('div.tagnew h3');
 
-//           const cNew = {
-//             title: "",
-//             url: "",
-//             desc: "",
-//             content: ""
-//           }
-//           var a = $(this);
-//           cNew.url = a
-//             .children()
-//             .attr('href')
-//           cNew.title = a.text()
-//           // if (i === 0)
-//           cDetail.queue(`http://genk.vn${cNew.url}`)
-//         })
+        var tags = []
+        tagsNodes.each(async function (i, e) {
+          var tagName = $(this).children().attr('title');
 
-//       }
-//       done();
-//     }
-//   });
 
-//   c.queue([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,].map(e =>`http://genk.vn/ajax-home/page-${e}/20181126155940611__2018112522505872__20181126111034876__20181126121146205__20181126082715501.chn`));
-// })
+          var ts = await Tag.find({
+            name: tagName
+          });
+          var foundTag = ts[0];
+          if (!foundTag) foundTag = await Tag.create({
+            name: tagName
+          });
+          tags.push(foundTag._id)
+          if (tags.length === tagsNodes.length) {
+            console.log(tags)
+            Category.find({
+              name: categoryName
+            }).then(rs => {
+              if (rs.length > 0) {
+                var cate = rs[0];
+                model.create({
+                  title,
+                  desc,
+                  content,
+                  thumb,
+                  category: cate._id,
+                  source,
+                  author,
+                  time,
+                  tags
+                })
+              } else Category.create({
+                name: categoryName
+              }).then((cate) => {
+                model.create({
+                  title,
+                  desc,
+                  content,
+                  thumb,
+                  category: cate._id,
+                  source,
+                  author,
+                  time,
+                  tags
+                })
+              })
+            })
+          }
+        })
+
+
+        // console.log("tags", tags)
+
+
+
+
+        // model.create({title, desc, content, thumb})
+
+      }
+      done();
+    }
+  })
+
+  var c = new Crawler({
+    maxConnections: 1,
+    callback: function (error, res, done) {
+      if (error) {
+        console.log(error);
+      } else {
+        var $ = res.$;
+        const nodes = $(`li.fade-out`)
+
+        nodes.each(function (i, e) {
+          var a = $(this);
+          const url = a
+            .children()
+            .attr('href')
+
+          cDetail.queue(`http://gamek.vn${url}`)
+        })
+
+      }
+      done();
+    }
+  });
+  
+  var arr = [];
+  for (let index = 5; index < 10; index++) {
+    arr.push(index)
+  }
+
+  c.queue(arr.map(e => `http://s.gamek.vn/Ajax/DanhSachTin_Home.aspx?Page=${e}&homeurl=home&listNewsId=2018112716201765%2C20181127160309165%2C20181127101803261%2C20181126131025883`));
+})
 
 export const schema = model.schema
 export default model;
