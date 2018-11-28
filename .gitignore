@@ -11,3 +11,6 @@ npm-debug.log
 .nyc_output
 coverage
 cassettes
+build
+yarn.lock
+yarn-error.log
